@@ -1,5 +1,6 @@
 from db import db
 
+# Modelo para criar o banco de dados de Itens
 class ItemModel(db.model):
     __tablename__ = "items"
 

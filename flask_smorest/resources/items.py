@@ -2,8 +2,10 @@ import uuid
 from flask import request
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
-from db import items
 from schemas import ItemSchema, ItemUpdateSchema
+from models import ItemModel
+from sqlalchemy.exc import SQLAlchemyError
+from db import db
 
 
 blp = Blueprint("Items", __name__, description="Operacoes nos itens." )
@@ -12,48 +14,47 @@ blp = Blueprint("Items", __name__, description="Operacoes nos itens." )
 class Item(MethodView):
     @blp.response(200, ItemSchema) # Decorator
     def get(self, item_id):
-        try:
-            return items[item_id]
-        except KeyError:
-            abort(404, message="Item nao encontrado.")
+        item = ItemModel.query.get_or_404(item_id)
+        return item
 
 
     def delete(self, item_id):
-        try:
-            del items[item_id]
-            return {"message" : "Item deletado."}
-        except KeyError:
-            abort(404, message="Item nao encontrado.")
+        item = ItemModel.query.get_or_404(item_id)
+        db.session.delete(item)
+        db.session.commit()
+        return {"message": "Item deletado"}
 
 
     @blp.arguments(ItemUpdateSchema) # Decorator
     @blp.response(200, ItemSchema) # Decorator
     def put(self, item_data, item_id):
        
-        try:
-            item = items[item_id]
-            item |= item_data
-            return item
-        except KeyError:
-            abort(404, message="Item nao encontrado.")
+        item = ItemModel.query.get(item_id)
+        if item:
+            item.preco = item_data["preco"]
+            item.nome = item_data["nome"]
+        else:
+            item = ItemModel(id=item_id, **item_data)
 
+        db.session.add(item)
+        db.session.commit()
 
 @blp.route("/item")
 class ItemList(MethodView):
     @blp.response(200, ItemSchema(many=True)) # Decorator
     def get(self):
-        return items.values()
+        return ItemModel.query.all()
     
     @blp.arguments(ItemSchema) # Decorator
     @blp.response(201, ItemSchema) # Decorator
     def post(self, item_data):
+        item = ItemModel(**item_data)
 
-        for item in items.values():
-            if (item_data['nome'] == item['nome'] and item_data['id_loja'] == item['id_loja']):
-                abort(400, message=f"Item ja existe.")
+        try:
+            db.session.add(item)
+            db.session.comit()
 
-        
-        item_id = uuid.uuid4().hex # Cria ID Universal
-        new_item = {**item_data, "id": item_id}
-        items[item_id] = new_item
-        return new_item, 201
+        except SQLAlchemyError:
+            abort(500, message="Um erro ocorreu enquanto os dados estavam sendo inseridos.")
+
+        return item

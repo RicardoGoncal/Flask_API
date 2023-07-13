@@ -2,8 +2,10 @@ import uuid
 from flask import request
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
-from db import stores
 from schemas import StoreSchema
+from db import db
+from models import StoreModel
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 
 blp = Blueprint("stores", __name__, description="Operacoes nas lojas." )
@@ -13,36 +15,36 @@ blp = Blueprint("stores", __name__, description="Operacoes nas lojas." )
 class Store(MethodView):
     @blp.response(200, StoreSchema) # Decorator
     def get(self, id_loja):
-        try:
-            return stores[id_loja]
-        except KeyError:
-            abort(404, message="Loja nao encontrada.")
-
+        store = StoreModel.query.get_or_404(id_loja)
+        return store
+       
 
     def delete(self, id_loja):
-        try:
-            del stores[id_loja]
-            return {"message" : "Loja deletada."}
-        except KeyError:
-            abort(404, message="Loja nao encontrada.")
+        store = StoreModel.query.get_or_404(id_loja)
+        db.session.delete(store)
+        db.session.commit()
+        return {"message": "Loja Deletada"}
 
 
 @blp.route("/store")
 class StoreList(MethodView):
     @blp.response(200, StoreSchema(many=True)) # Decorator
     def get(self):
-        return {"stores": list(stores.values())}
+        return StoreModel.query.all()
     
 
     @blp.arguments(StoreSchema) # Decorator
     @blp.response(200, StoreSchema) # Decorator
     def post(self, store_data):
 
-        for store in store.values():
-            if (store_data['nome'] == store['nome']):
-                abort(400, message=f"Loja ja existe.")
+        store = StoreModel(**store_data)
 
-        store_id = uuid.uuid4().hex # Cria ID Universal
-        new_store = {**store_data, "id": store_id}
-        stores[store_id] = new_store
-        return new_store 
+        try:
+            db.session.add(store)
+            db.session.comit()
+        except IntegrityError:
+            abort(400, message="Uma loja com esse nome ja existe.")
+        except SQLAlchemyError:
+            abort(500, message="Um erro ocorreu enquanto os dados estavam sendo inseridos.")
+
+        return store
