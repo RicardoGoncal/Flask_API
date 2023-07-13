@@ -1,5 +1,3 @@
-import uuid
-from flask import request
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
 from schemas import ItemSchema, ItemUpdateSchema
@@ -52,7 +50,7 @@ class ItemList(MethodView):
 
         try:
             db.session.add(item)
-            db.session.comit()
+            db.session.commit()
 
         except SQLAlchemyError:
             abort(500, message="Um erro ocorreu enquanto os dados estavam sendo inseridos.")

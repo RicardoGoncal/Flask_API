@@ -1,5 +1,3 @@
-import uuid
-from flask import request
 from flask.views import MethodView
 from flask_smorest import abort, Blueprint
 from schemas import StoreSchema
@@ -41,7 +39,7 @@ class StoreList(MethodView):
 
         try:
             db.session.add(store)
-            db.session.comit()
+            db.session.commit()
         except IntegrityError:
             abort(400, message="Uma loja com esse nome ja existe.")
         except SQLAlchemyError:
