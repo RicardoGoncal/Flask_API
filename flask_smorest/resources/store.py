@@ -9,7 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 blp = Blueprint("stores", __name__, description="Operacoes nas lojas." )
 
 
-@blp.route("/store/<string:id_loja>")
+@blp.route("/store/int:id_loja>")
 class Store(MethodView):
     @blp.response(200, StoreSchema) # Decorator
     def get(self, id_loja):

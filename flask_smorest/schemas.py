@@ -70,7 +70,21 @@ class TagSchema(PlainTagSchema):
     items = fields.List(fields.Nested(PlainItemSchema()), dump_only=True)
 
 
+"""
+Esquema para trabalhar com relação N para N no banco de dados
+O que seria uma TAG associada a um item da loja 
+"""
 class TagAndItemSchema(Schema):
     message = fields.Str()
     item = fields.Nested(ItemSchema)
     tag = fields.Nested(TagSchema)
+
+
+"""
+Esquema de usuario e senha para gerir o JWT
+JWT: token para uso da API de acordo com a autenticação do usuario
+"""
+class UserSchema(Schema):
+    user_id = fields.Int(dump_only=True)
+    username = fields.Str(required=True)
+    password = fields.Str(required=True, load_only=True)
