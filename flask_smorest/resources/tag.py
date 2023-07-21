@@ -13,7 +13,7 @@ class TagInStore(MethodView):
     @blp.response(200, TagSchema(many=True))
     def get(self, id_loja):
         store = StoreModel.query.get_or_404(id_loja)
-        return store.tags.all()
+        return store.tags.all() # lazy="dynamic" significa 'tags' é uma query 
     
     @blp.arguments(TagSchema)
     @blp.response(201, TagSchema)

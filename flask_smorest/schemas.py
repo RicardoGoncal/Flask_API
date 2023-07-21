@@ -34,14 +34,6 @@ class PlainTagSchema(Schema):
 
 
 """
-Plano de esquema para update de itens 
-"""
-class ItemUpdateSchema(Schema):
-    nome = fields.Str()
-    preco = fields.Float()
-
-
-"""
 Esquema de itens com os campos definidos no plano + id_loja
 Temos aqui uma relacao com o plano de lojas, qual possui campos de loja
 """
@@ -49,6 +41,14 @@ class ItemSchema(PlainItemSchema):
     id_loja = fields.Int(required=True, load_only=True)
     store = fields.Nested(PlainStoreSchema(), dump_only=True)
     tags = fields.List(fields.Nested(PlainTagSchema()), dump_only=True)
+
+
+"""
+Plano de esquema para update de itens 
+"""
+class ItemUpdateSchema(Schema):
+    nome = fields.Str()
+    preco = fields.Float()
 
 
 """
